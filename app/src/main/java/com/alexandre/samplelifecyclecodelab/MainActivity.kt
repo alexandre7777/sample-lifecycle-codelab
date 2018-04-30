@@ -1,33 +1,35 @@
 package com.alexandre.samplelifecyclecodelab
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
-import android.os.SystemClock
-
-
+import android.util.Log
 
 class MainActivity : AppCompatActivity() {
+
+    lateinit var liveDataTimerViewModel : LiveDataTimerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // The ViewModelStore provides a new ViewModel or one previously created.
-        val chronometerViewModel = ViewModelProviders.of(this).get(ChronometerViewModel::class.java)
+        liveDataTimerViewModel = ViewModelProviders.of(this).get(LiveDataTimerViewModel::class.java)
 
-        if(chronometerViewModel.mStartTime == 0L)
-        {
-            val startTime = SystemClock.elapsedRealtime()
-            chronometerViewModel.mStartTime = startTime
-            chronometer.base = startTime
-        }
-        else
-        {
-            chronometer.base = chronometerViewModel.mStartTime
-        }
+        subscribe()
+    }
 
-        chronometer.start()
+    private fun subscribe() {
+        val elapsedTimeObserver = object : Observer<Long> {
+            override fun onChanged(t: Long?) {
+                val newText = resources.getString(R.string.seconds, t)
+
+                timer_textview.text = newText
+
+                Log.d("TAG", "Updating timer" + newText)
+            }
+        }
+        liveDataTimerViewModel.getElapsedTime().observe(this, elapsedTimeObserver)
     }
 }
